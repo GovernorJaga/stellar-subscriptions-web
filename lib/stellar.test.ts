@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { explainError, withRetry } from "./stellar";
+import { cursorLedger, explainError, withRetry } from "./stellar";
+import { LEDGER_SECONDS as FORMAT_LEDGER_SECONDS } from "./format";
+import { LEDGER_SECONDS } from "./stellar";
 
 describe("withRetry", () => {
   beforeEach(() => {
@@ -72,5 +74,29 @@ describe("explainError", () => {
 
   it("explains balance-style messages", () => {
     expect(explainError("insufficient balance")).toMatch(/balance/i);
+  });
+});
+
+describe("cursorLedger", () => {
+  it("returns 0 for malformed cursor strings without throwing", () => {
+    expect(() => cursorLedger("bad-cursor")).not.toThrow();
+    expect(cursorLedger("bad-cursor")).toBe(0);
+    expect(() => cursorLedger("")).not.toThrow();
+    expect(cursorLedger("")).toBe(0);
+    expect(() => cursorLedger("not-a-number-0")).not.toThrow();
+    expect(cursorLedger("not-a-number-0")).toBe(0);
+  });
+
+  it("decodes a valid cursor correctly", () => {
+    const ledger = 12345;
+    const cursor = `${ledger}-1`;
+    expect(cursorLedger(cursor)).toBe(ledger);
+  });
+});
+
+describe("LEDGER_SECONDS", () => {
+  it("is exported from lib/stellar and re-exported by lib/format with the same value", () => {
+    expect(typeof LEDGER_SECONDS).toBe("number");
+    expect(FORMAT_LEDGER_SECONDS).toBe(LEDGER_SECONDS);
   });
 });
