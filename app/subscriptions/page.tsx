@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useSubscriptions } from "@/hooks/useSubscriptions";
 import { sortForDisplay } from "@/lib/subscription";
+import { scoreHealth, type HealthLevel } from "@/lib/subscription-health";
 import { CommittedSpend } from "@/components/subscription/CommittedSpend";
 import { SubscriptionCard } from "@/components/subscription/SubscriptionCard";
 import { AllowanceBanner } from "@/components/subscription/AllowanceBanner";
@@ -50,8 +51,10 @@ function Subscriptions({ address }: { address: string }) {
   }
 
   const ordered = sortForDisplay(subs.data);
+  const health = scoreHealth(subs.data, subs.balances, subs.allowances);
   return (
     <div className="space-y-6">
+      <HealthBadge health={health} />
       <AllowanceBanner subs={subs.data} />
       <CommittedSpend subs={subs.data} />
       <ul className="grid gap-4 lg:grid-cols-2">
@@ -63,6 +66,24 @@ function Subscriptions({ address }: { address: string }) {
           </li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+const HEALTH_STYLES: Record<HealthLevel, { label: string; className: string }> = {
+  good: { label: "Good", className: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" },
+  "at-risk": { label: "At Risk", className: "bg-amber-500/15 text-amber-600 dark:text-amber-400" },
+  critical: { label: "Critical", className: "bg-red-500/15 text-red-600 dark:text-red-400" },
+};
+
+function HealthBadge({ health }: { health: HealthLevel }) {
+  const { label, className } = HEALTH_STYLES[health];
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-sm text-muted">Subscription health</span>
+      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${className}`}>
+        {label}
+      </span>
     </div>
   );
 }

@@ -109,6 +109,18 @@ export default function HelpPage() {
             ))}
           </ul>
         </div>
+
+        <p className="text-sm text-muted">
+          Running a plan yourself? The{" "}
+          <a
+            href="https://github.com/your-org/subscription-dapp/blob/main/docs/merchant-guide.md"
+            className="text-brand hover:underline"
+          >
+            merchant guide
+          </a>{" "}
+          walks through the full workflow: creating a plan, sharing the link, monitoring subscribers, charging and
+          deactivating.
+        </p>
       </section>
 
       <p className="text-sm text-muted">
