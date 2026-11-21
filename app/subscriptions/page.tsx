@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { useSubscriptions } from "@/hooks/useSubscriptions";
 import { sortForDisplay } from "@/lib/subscription";
@@ -11,6 +12,14 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { LoadingBlock } from "@/components/ui/Spinner";
 import { RequireWallet } from "@/components/wallet/RequireWallet";
+import { SubStatus } from "@/types";
+
+const BASE_TITLE = "My Subscriptions";
+
+/** Browser-tab title: the active count once loaded, the bare title otherwise. */
+function subscriptionsTitle(activeCount: number | undefined): string {
+  return activeCount === undefined ? BASE_TITLE : `${BASE_TITLE} (${activeCount})`;
+}
 
 export default function MySubscriptionsPage() {
   return (
@@ -30,6 +39,19 @@ export default function MySubscriptionsPage() {
 
 function Subscriptions({ address }: { address: string }) {
   const subs = useSubscriptions(address);
+  const activeCount = subs.data?.filter((sub) => sub.status === SubStatus.Active).length;
+
+  useEffect(() => {
+    document.title = subscriptionsTitle(activeCount);
+  }, [activeCount]);
+
+  // Don't leave a stale count behind when the list unmounts (e.g. wallet disconnects).
+  useEffect(
+    () => () => {
+      document.title = BASE_TITLE;
+    },
+    [],
+  );
 
   if (subs.error) {
     return <ErrorState error={subs.error} title="Couldn't load your subscriptions" onRetry={subs.reload} />;
