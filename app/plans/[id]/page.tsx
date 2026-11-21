@@ -1,5 +1,6 @@
 "use client";
 
+import type { Metadata } from "next";
 import Link from "next/link";
 import { usePlan } from "@/hooks/usePlans";
 import { useToken } from "@/hooks/useToken";
@@ -14,6 +15,41 @@ import { explorerAccountUrl, explorerContractUrl } from "@/lib/stellar";
 
 export function sanitizePlanName(name: string): string {
   return name.replace(/[<>]/g, "");
+}
+
+const DEFAULT_OG_IMAGE = "/og/plan.png";
+
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  const id = /^\d+$/.test(params.id) ? Number(params.id) : null;
+  if (id === null) {
+    return { title: "Plan not found" };
+  }
+
+  try {
+    const plan = await fetchPlan(id);
+    const title = plan.name;
+    const description = `Subscribe to ${plan.name} for ${formatAmount(plan.amountPerPeriod)} ${plan.tokenSymbol} ${describeInterval(plan.intervalLedgers)}`;
+    const image = plan.imageUrl ?? DEFAULT_OG_IMAGE;
+
+    return {
+      title,
+      description,
+      openGraph: {
+        title,
+        description,
+        type: "website",
+        images: [{ url: image, alt: plan.name }],
+      },
+      twitter: {
+        card: "summary_large_image",
+        title,
+        description,
+        images: [image],
+      },
+    };
+  } catch {
+    return { title: "Plan not found" };
+  }
 }
 
 export default function PlanDetailPage({ params }: { params: { id: string } }) {
